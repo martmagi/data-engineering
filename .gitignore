@@ -130,6 +130,7 @@ dmypy.json
 
 # JetBrains
 .idea
+.DS_Store
 
 # Project specific
 logs
