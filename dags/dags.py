@@ -4,7 +4,6 @@ import json
 import requests
 from airflow import DAG
 from airflow.operators.bash import BashOperator
-from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 
 DAGS_FOLDER = '/opt/airflow/dags/'
@@ -18,8 +17,8 @@ default_args_dict = {
     'retry_delay': datetime.timedelta(minutes=5),
 }
 
-assignment_dag = DAG(
-    dag_id='assignment_dag',
+default_dag = DAG(
+    dag_id='default_dag',
     default_args=default_args_dict,
     catchup=False,
     template_searchpath=DAGS_FOLDER,
@@ -34,30 +33,22 @@ def get_dataset(output_folder: str, url: str):
         json.dump(memes_raw_data, f, ensure_ascii=False)
 
 
-first_node = PythonOperator(
+get_dataset_task = PythonOperator(
     task_id='get_dataset',
-    dag=assignment_dag,
-    trigger_rule='none_failed',
+    dag=default_dag,
     python_callable=get_dataset,
     op_kwargs={
         "output_folder": DAGS_FOLDER,
         "url": REQUEST_URL,
-    },
-    depends_on_past=False,
+    }
 )
 
-run_jar_task = BashOperator(
-    task_id='runjar',
+run_talend_jar = BashOperator(
+    task_id='run_talend_jar',
     trigger_rule='none_failed',
-    dag=assignment_dag,
-    bash_command='java -cp /talend-files/cleansing.jar'
+    dag=default_dag,
+    bash_command='java -jar ../talend-files/cleansing_1.jar'
 )
 
-final_dummy_node = DummyOperator(
-    task_id='finale',
-    dag=assignment_dag,
-    trigger_rule='none_failed'
-)
-
-# Run the DAGs
-first_node >> run_jar_task >> final_dummy_node
+# Run the operators
+get_dataset_task >> run_talend_jar

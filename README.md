@@ -17,19 +17,7 @@ Run `echo -e "AIRFLOW_UID=$(id -u)" > .env`
 
 # Running
 
-On all operating systems, you need to run database migrations and create the first user account. To do it, run.
-
-`docker-compose up airflow-init`
-
-The account created has the login `airflow` and the password `airflow`.
-
-In order to get Java running in Docker, had to create a Dockerfile following [this guide](https://stackoverflow.com/questions/67268054/how-to-install-java-in-an-airflow-container-using-docker-compose-yaml).
-
-To start all Airflow services in the background: 
-
-`docker-compose up -d --build`
-
-To start monitoring logs of the running Airflow services in terminal:
+Running Airflow services (add `-d` to run in background, or `--build` to build images): 
 
 `docker-compose up`
 
@@ -46,3 +34,7 @@ The following command stops containers and removes containers, networks, volumes
 by `docker-compose up`.
 
 `docker-compose down --volumes --remove-orphans`
+
+# Comments
+
+In order to get Java running in Docker, had to create a Dockerfile following [this guide](https://stackoverflow.com/questions/67268054/how-to-install-java-in-an-airflow-container-using-docker-compose-yaml).
