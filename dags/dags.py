@@ -3,6 +3,7 @@ import json
 
 import requests
 from airflow import DAG
+from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 
@@ -45,6 +46,12 @@ first_node = PythonOperator(
     depends_on_past=False,
 )
 
+run_jar_task = BashOperator(
+    task_id='runjar',
+    trigger_rule='none_failed',
+    dag=assignment_dag,
+    bash_command='java -cp /talend-files/cleansing.jar'
+)
 
 final_dummy_node = DummyOperator(
     task_id='finale',
@@ -53,4 +60,4 @@ final_dummy_node = DummyOperator(
 )
 
 # Run the DAGs
-first_node >> final_dummy_node
+first_node >> run_jar_task >> final_dummy_node
