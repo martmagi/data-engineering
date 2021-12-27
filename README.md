@@ -23,11 +23,15 @@ On all operating systems, you need to run database migrations and create the fir
 
 The account created has the login `airflow` and the password `airflow`.
 
-To start all Airflow services:
+In order to get Java running in Docker, had to create a Dockerfile following [this guide](https://stackoverflow.com/questions/67268054/how-to-install-java-in-an-airflow-container-using-docker-compose-yaml).
+
+To start all Airflow services in the background: 
+
+`docker-compose up -d --build`
+
+To start monitoring logs of the running Airflow services in terminal:
 
 `docker-compose up`
-
-To check whether all containers started up - `docker-compose up`
 
 # Accessing the environment
 
