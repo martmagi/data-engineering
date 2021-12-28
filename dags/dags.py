@@ -6,10 +6,11 @@ import pdpipe as pdp
 
 import requests
 from airflow import DAG
-from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 
 DAGS_FOLDER = '/opt/airflow/dags/'
+KYM_FILE_PATH = DAGS_FOLDER + 'kym.json'
+CLEAN_FILE_PATH = DAGS_FOLDER + 'kym_clean.json'
 REQUEST_URL = 'https://owncloud.ut.ee/owncloud/index.php/s/g4qB5DZrFEz2XLm/download/kym.json'
 
 default_args_dict = {
@@ -20,8 +21,8 @@ default_args_dict = {
     'retry_delay': datetime.timedelta(minutes=5),
 }
 
-assignment_dag = DAG(
-    dag_id='assignment_dag',
+default_dag = DAG(
+    dag_id='Data_Engineering_Project_G12',
     default_args=default_args_dict,
     catchup=False,
     template_searchpath=DAGS_FOLDER,
@@ -29,14 +30,14 @@ assignment_dag = DAG(
 )
 
 
-def get_dataset(output_folder: str, url: str):
-    url = f"{url}"
-    memes_raw_data = requests.get(url).json()
-    with open(f'{output_folder}/memes_raw_data.json', 'w') as f:
+def get_dataset(kym_file_path: str, url: str):
+    memes_raw_data = requests.get(f"{url}").json()
+    with open(f"{kym_file_path}", 'w') as f:
         json.dump(memes_raw_data, f, ensure_ascii=False)
 
-def first_clean(input_file: str, output_folder: str):
-    df=pd.read_json(f"{input_file}", orient='records')
+
+def first_clean(kym_file_path: str, clean_file_path: str):
+    df=pd.read_json(f"{kym_file_path}", orient='records')
 
     df[['status','origin','year']]=np.nan
     for i in range(len(df.details)):
@@ -51,38 +52,29 @@ def first_clean(input_file: str, output_folder: str):
     df_2=pipeline_1(df)
     js = df_2.to_json(orient = 'columns')
 
-    with open('cleaned_1.json', 'w', encoding='utf-8') as f:
-        json.dump(js, f, ensure_ascii=False, indent=4)
+    with open(f"{clean_file_path}", 'w', encoding='utf-8') as f:
+        json.dump(js, f, ensure_ascii=False)
 
-first_node = PythonOperator(
+
+get_dataset_task = PythonOperator(
     task_id='get_dataset',
-    dag=assignment_dag,
-    trigger_rule='none_failed',
+    dag=default_dag,
     python_callable=get_dataset,
     op_kwargs={
-        "output_folder": DAGS_FOLDER,
-        "url": REQUEST_URL,
-    },
-    depends_on_past=False,
+        "kym_file_path": KYM_FILE_PATH,
+        "url": REQUEST_URL
+    }
 )
 
-second_node = PythonOperator(
+cleaning_task = PythonOperator(
     task_id='first_clean',
-    dag=assignment_dag,
-    trigger_rule='none_failed',
+    dag=default_dag,
     python_callable=first_clean,
     op_kwargs={
-        "input_file": "memes_raw_data.json",
-        "output_file": DAGS_FOLDER,
-    },
-    depends_on_past=True,
+        "kym_file_path": KYM_FILE_PATH,
+        "clean_file_path": CLEAN_FILE_PATH
+    }
 )
 
-final_dummy_node = DummyOperator(
-    task_id='finale',
-    dag=assignment_dag,
-    trigger_rule='none_failed'
-)
-
-# Run the DAGs
-first_node >> second_node >> final_dummy_node
+# Run the tasks
+get_dataset_task >> cleaning_task
