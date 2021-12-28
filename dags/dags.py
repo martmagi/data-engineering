@@ -8,6 +8,7 @@ from airflow.operators.python import PythonOperator
 
 DAGS_FOLDER = '/opt/airflow/dags/'
 REQUEST_URL = 'https://owncloud.ut.ee/owncloud/index.php/s/g4qB5DZrFEz2XLm/download/kym.json'
+TALEND_JAR_URL = 'https://github.com/martmagi/data-engineering/blob/main/talend_files/cleansing_1.jar'
 
 default_args_dict = {
     'start_date': datetime.datetime(2021, 11, 1, 0, 0, 0),
@@ -33,6 +34,13 @@ def get_dataset(output_folder: str, url: str):
         json.dump(memes_raw_data, f, ensure_ascii=False)
 
 
+def get_talend_jar(output_folder: str, url: str):
+    url = f"{url}"
+    talend_jar_file = requests.get(url)
+    with open(f'{output_folder}/talend.jar', 'wb') as f:
+        f.write(talend_jar_file.content)
+
+
 get_dataset_task = PythonOperator(
     task_id='get_dataset',
     dag=default_dag,
@@ -43,12 +51,22 @@ get_dataset_task = PythonOperator(
     }
 )
 
+get_talend_jar_task = PythonOperator(
+    task_id='get_talend_jar',
+    dag=default_dag,
+    python_callable=get_talend_jar,
+    op_kwargs={
+        "output_folder": DAGS_FOLDER,
+        "url": TALEND_JAR_URL,
+    }
+)
+
 run_talend_jar = BashOperator(
     task_id='run_talend_jar',
     trigger_rule='none_failed',
     dag=default_dag,
-    bash_command='java -jar ../talend-files/cleansing_1.jar'
+    bash_command='java -jar talend.jar'
 )
 
 # Run the operators
-get_dataset_task >> run_talend_jar
+get_dataset_task >> get_talend_jar_task >> run_talend_jar
