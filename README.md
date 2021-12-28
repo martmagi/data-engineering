@@ -17,7 +17,7 @@ Run `echo -e "AIRFLOW_UID=$(id -u)" > .env`
 
 # Running
 
-Running Airflow services (add `-d` to run in background, or `--build` to build images): 
+Running Airflow services (add `-d` to run in background): 
 
 `docker-compose up`
 
@@ -34,7 +34,3 @@ The following command stops containers and removes containers, networks, volumes
 by `docker-compose up`.
 
 `docker-compose down --volumes --remove-orphans`
-
-# Comments
-
-In order to get Java running in Docker, had to create a Dockerfile following [this guide](https://stackoverflow.com/questions/67268054/how-to-install-java-in-an-airflow-container-using-docker-compose-yaml).
