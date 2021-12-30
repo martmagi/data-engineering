@@ -3,6 +3,7 @@ import json
 import numpy as np
 import pandas as pd
 import pdpipe as pdp
+import pymongo
 
 import requests
 from airflow import DAG
@@ -54,6 +55,11 @@ def first_clean(kym_file_path: str, clean_file_path: str):
 
     with open(f"{clean_file_path}", 'w', encoding='utf-8') as f:
         json.dump(js, f, ensure_ascii=False)
+
+    client = pymongo.MongoClient('mongodb+srv://data-engineering-g12:<password>>@data-engineering-g12.wvade.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
+    db = client.memesDB
+    results_list = df_2.to_dict(orient='records')
+    db.memes.insert_many(results_list)
 
 
 get_dataset_task = PythonOperator(
