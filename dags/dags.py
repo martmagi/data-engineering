@@ -1,18 +1,20 @@
 import datetime
-import json
-import numpy as np
-import pandas as pd
-import pdpipe as pdp
-import pymongo
 
-import requests
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+
+from augmentation import augment
+from download_datasets import get_raw_dataset, get_vision_dataset
+from mongo_upload import upload_to_mongo
+from transformation import transform
+from cleaning import clean
 
 DAGS_FOLDER = '/opt/airflow/dags/'
 KYM_FILE_PATH = DAGS_FOLDER + 'kym.json'
 CLEAN_FILE_PATH = DAGS_FOLDER + 'kym_clean.json'
-REQUEST_URL = 'https://owncloud.ut.ee/owncloud/index.php/s/g4qB5DZrFEz2XLm/download/kym.json'
+VISION_FILE_PATH = DAGS_FOLDER + 'kym_vision.json'
+AUGMENTED_FILE_PATH = DAGS_FOLDER + 'kym_augment.json'
+TRANSFORMED_FILE_PATH = DAGS_FOLDER + 'kym_transform.json'
 
 default_args_dict = {
     'start_date': datetime.datetime(2021, 11, 1, 0, 0, 0),
@@ -30,57 +32,63 @@ default_dag = DAG(
     schedule_interval="35 12 * * 5",
 )
 
-
-def get_dataset(kym_file_path: str, url: str):
-    memes_raw_data = requests.get(f"{url}").json()
-    with open(f"{kym_file_path}", 'w') as f:
-        json.dump(memes_raw_data, f, ensure_ascii=False)
-
-
-def first_clean(kym_file_path: str, clean_file_path: str):
-    df=pd.read_json(f"{kym_file_path}", orient='records')
-
-    df[['status','origin','year']]=np.nan
-    for i in range(len(df.details)):
-        df.status[i]=df.details[i]['status']
-        df.origin[i]=df.details[i]['origin']
-        df.year[i]=df.details[i]['year']
-
-    drop_columns=pdp.ColDrop(columns=["last_update_source","category","template_image_url", "ld", "additional_references", "search_keywords", "meta","details"])
-    remove_duplicates=pdp.DropDuplicates(["title", "url"])
-    drop_unconfirmed=pdp.ValKeep(values=["confirmed"], columns=["status"])
-    pipeline_1=pdp.PdPipeline([drop_columns,remove_duplicates,drop_unconfirmed])
-    df_2=pipeline_1(df)
-    js = df_2.to_json(orient = 'columns')
-
-    with open(f"{clean_file_path}", 'w', encoding='utf-8') as f:
-        json.dump(js, f, ensure_ascii=False)
-
-    client = pymongo.MongoClient('mongodb+srv://data-engineering-g12:<password>>@data-engineering-g12.wvade.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
-    db = client.memesDB
-    results_list = df_2.to_dict(orient='records')
-    db.memes.insert_many(results_list)
-
-
-get_dataset_task = PythonOperator(
-    task_id='get_dataset',
+get_raw_dataset_task = PythonOperator(
+    task_id='get_raw_dataset',
     dag=default_dag,
-    python_callable=get_dataset,
+    python_callable=get_raw_dataset,
     op_kwargs={
-        "kym_file_path": KYM_FILE_PATH,
-        "url": REQUEST_URL
+        "kym_file_path": KYM_FILE_PATH
     }
 )
 
 cleaning_task = PythonOperator(
-    task_id='first_clean',
+    task_id='clean',
     dag=default_dag,
-    python_callable=first_clean,
+    python_callable=clean,
     op_kwargs={
         "kym_file_path": KYM_FILE_PATH,
         "clean_file_path": CLEAN_FILE_PATH
     }
 )
 
+get_vision_dataset_task = PythonOperator(
+    task_id='get_vision_dataset',
+    dag=default_dag,
+    python_callable=get_vision_dataset,
+    op_kwargs={
+        "vision_file_path": VISION_FILE_PATH
+    }
+)
+
+augmentation_task = PythonOperator(
+    task_id='augment',
+    dag=default_dag,
+    python_callable=augment,
+    op_kwargs={
+        "clean_file_path": CLEAN_FILE_PATH,
+        "vision_file_path": VISION_FILE_PATH,
+        "augmented_file_path": AUGMENTED_FILE_PATH
+    }
+)
+
+transformation_task = PythonOperator(
+    task_id='transform',
+    dag=default_dag,
+    python_callable=transform,
+    op_kwargs={
+        "augmented_file_path": AUGMENTED_FILE_PATH,
+        "transformed_file_path": TRANSFORMED_FILE_PATH
+    }
+)
+
+mongo_upload_task = PythonOperator(
+    task_id='mongo_upload',
+    dag=default_dag,
+    python_callable=upload_to_mongo,
+    op_kwargs={
+        "transformed_file_path": TRANSFORMED_FILE_PATH
+    }
+)
+
 # Run the tasks
-get_dataset_task >> cleaning_task
+get_raw_dataset_task >> cleaning_task >> get_vision_dataset_task >> augmentation_task >> transformation_task >> mongo_upload_task
