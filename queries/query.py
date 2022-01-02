@@ -95,3 +95,53 @@ for doc in memes_by_origin:
 print('')
 ​
 # Something to Query about semantic relations of memes
+
+#Show the number of the memes per weekday in descending order (SQL)
+memes_per_weekday_pipeline = [
+    {
+        "$group": {
+            "_id": "$added_weekday",
+            "memes_per_weekday": {
+                "$sum": 1
+            }
+        }
+    },
+    {
+        "$sort": {
+            "memes_per_weekday": -1
+        }
+    },
+    {
+        "$limit": 3
+    }
+]
+memes_per_weekday = db.memes.aggregate(memes_per_weekday_pipeline)
+print('Number of memes per weekday in descending order:')
+for doc in memes_per_weekday:
+    print(doc)
+print('')
+
+#Show the number of the memes per month in descending order (SQL)
+memes_per_month_pipeline = [
+    {
+        "$group": {
+            "_id": "$added_month",
+            "memes_per_month": {
+                "$sum": 1
+            }
+        }
+    },
+    {
+        "$sort": {
+            "memes_per_month": -1
+        }
+    },
+    {
+        "$limit": 6
+    }
+]
+memes_per_month = db.memes.aggregate(memes_per_month_pipeline)
+print('Number of memes per month in descending order:')
+for doc in memes_per_month:
+    print(doc)
+print('')
