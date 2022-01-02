@@ -1,6 +1,14 @@
 import pymongo
-client = pymongo.MongoClient('mongodb+srv://data-engineering-g12:<password>@data-engineering-g12.wvade.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
+
+MONGO_USER = 'data-engineering-g12'
+MONGO_SECRET = 'password'
+MONGO_URL = 'data-engineering-g12.wvade.mongodb.net'
+MONGO_SCHEMA = 'myFirstDatabase'
+MONGO_CONNECTION_STRING = f'mongodb+srv://{MONGO_USER}:{MONGO_SECRET}@{MONGO_URL}/{MONGO_SCHEMA}?retryWrites=true&w=majority'
+
+client = pymongo.MongoClient(MONGO_CONNECTION_STRING)
 db = client.memesDB
+
 #Show the number of the memes per year in descending order (SQL)
 memes_per_year_pipeline = [
     {
