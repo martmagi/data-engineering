@@ -1,6 +1,7 @@
 import datetime
 
 from airflow import DAG
+from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 
 from augmentation import augment
@@ -90,5 +91,11 @@ mongo_upload_task = PythonOperator(
     }
 )
 
+neo4j_task = DummyOperator(
+    task_id='run_neo4j',
+    dag=default_dag
+)
+
 # Run the tasks
-get_raw_dataset_task >> cleaning_task >> get_vision_dataset_task >> augmentation_task >> transformation_task >> mongo_upload_task
+get_raw_dataset_task >> cleaning_task >> get_vision_dataset_task >> \
+augmentation_task >> transformation_task >> mongo_upload_task >> neo4j_task

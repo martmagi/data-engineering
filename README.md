@@ -35,8 +35,16 @@ by `docker-compose up`.
 
 `docker-compose down --volumes --remove-orphans`
 
-# Running the MongoDB queries
+# MongoDB
 
-Specify `MONGO_SECRET` value in `queries/queries.py#4`. Then run the query from IDE or from commandline using the python executable, e.g.
+MongoDB upload step is dependant on the configuration specified in `dags/mongo_upload.py`. 
+
+In order to run the queries, specify `MONGO_SECRET` value in `queries/queries.py#4`. 
+
+Then run the query from IDE or from commandline using the python executable, e.g.
 
 `python3 queries/query.py`
+
+# Neo4J
+
+Runs in Docker container, UI is accessible at: `http://localhost:7474` with username `neo4j` and password `changeme`.

@@ -1,7 +1,7 @@
 import pymongo
 
 MONGO_USER = 'data-engineering-g12'
-MONGO_SECRET = 'mkj2xap*CJB1btn2gcz'
+MONGO_SECRET = 'password'
 MONGO_URL = 'data-engineering-g12.wvade.mongodb.net'
 MONGO_SCHEMA = 'myFirstDatabase'
 MONGO_CONNECTION_STRING = f'mongodb+srv://{MONGO_USER}:{MONGO_SECRET}@{MONGO_URL}/{MONGO_SCHEMA}?retryWrites=true&w=majority'
