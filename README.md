@@ -34,3 +34,9 @@ The following command stops containers and removes containers, networks, volumes
 by `docker-compose up`.
 
 `docker-compose down --volumes --remove-orphans`
+
+# Running the MongoDB queries
+
+Specify `MONGO_SECRET` value in `queries/queries.py#4`. Then run the query from IDE or from commandline using the python executable, e.g.
+
+`python3 queries/query.py`
