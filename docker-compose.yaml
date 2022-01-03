@@ -44,7 +44,7 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.2.1}
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.2.3}
   # build: .
   environment:
     &airflow-common-env
@@ -54,7 +54,7 @@ x-airflow-common:
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-    AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- pdpipe pymongo}
   volumes:
@@ -77,15 +77,13 @@ services:
       - "7687:7687"
     environment:
       - NEO4J_dbms_security_procedures_unrestricted=apoc.*
-      - NEO4J_apoc_import_file_enabled=true
-      - NEO4J_dbms_shell_enabled=true
       - NEO4J_AUTH=neo4j/changeme
     volumes:
       - ./plugins:/plugins
       - ./data:/data
       - ./import:/import
   postgres:
-    image: postgres:13
+    image: postgres:14.1
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
