@@ -94,6 +94,5 @@ neo4j_task = DummyOperator(
     dag=default_dag
 )
 
-# Run the tasks. Two separate branches start with pulling two different datasets, and merging at augmentation task
-get_raw_dataset_task >> cleaning_task >> augmentation_task >> transformation_task >> mongo_upload_task >> neo4j_task
-get_vision_dataset_task >> augmentation_task >> transformation_task >> mongo_upload_task >> neo4j_task
+# Run the tasks.
+[get_raw_dataset_task >> cleaning_task, get_vision_dataset_task] >> augmentation_task >> transformation_task >> [mongo_upload_task, neo4j_task]
