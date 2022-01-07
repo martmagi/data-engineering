@@ -12,7 +12,7 @@ Roland Pajuleht
 # Our proposed taskplan:
 Idea was to make a minimalistic ER schema. Keep all the atomic attributes in respective entitites and keep all the 
 cardinalities under control. Meaning that there woulnd't exist M to N pairs.
-![img_2.png](https://github.com/martmagi/data-engineering/tree/main/images/img_2.png)
+![img_2.png](https://github.com/martmagi/data-engineering/tree/main/images/img_2.png?raw=true)
 
 we worked out a plan. On the first step, which is data cleaning, we drop the fields which we believe are not necessary for us, so that we can decrease the computational load due to memory footprint and calculations and so on. With the second step, data augmentation/enrichment, we chose to use google vision API response on our url. On the third step, data transformations, the idea was to get more meaningful information from the raw data and finally with the analysis step to run some queries, such as the most popular day for the meme upload or region specific memes and so on. 
 
