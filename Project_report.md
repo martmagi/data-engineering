@@ -112,6 +112,9 @@ In large the project was done as a group effort with us having regularly schedul
 Even as such, the tasks completed per person were roughly as follows:
 
 Mart - did most of the heavy coding required with airflow integrations and to get it properly running.
+
 Roland - Worked on Talend and ER-schema
+
 Kaja - Worked on Queries, Talend, ER-schema and project management
-Rasmus - Worked on pipelines, presentation and project management
+
+Rasmus - Worked out pipelines, presentation and project management
