@@ -27,7 +27,8 @@ default_args_dict = {
 default_dag = DAG(
     dag_id='Data_Engineering_Project_G12',
     default_args=default_args_dict,
-    template_searchpath=DAGS_FOLDER
+    template_searchpath=DAGS_FOLDER,
+    catchup=False  # otherwise starts a separate DAG run for each day since start_data
 )
 
 get_raw_dataset_task = PythonOperator(
