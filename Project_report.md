@@ -63,6 +63,14 @@ So as for our fifth dag we chose to import it to mongodb using pymongo.
 We chose to use mongoDB, since it was introduced to us in a course practice session and this particular session sympathized to us. MongoDB seemed like a perfect fit for nebwies like us. 
 ![img_22](https://user-images.githubusercontent.com/59621572/148609084-c7fc77ff-eb02-4b55-aa13-09d27afd9741.png)
 
+# Neo4J queries
+
+`MATCH (child)-[r:CHILD]->(parent) RETURN parent, COLLECT(child) as childs ORDER BY SIZE(childs) desc  limit 1`
+![most_children_query](./images/neo4j_mostchildren.png)
+
+`MATCH p=(start:Meme)-[:CHILD*1..10]->(end:Meme) RETURN p ORDER BY length(p) DESC LIMIT 1`
+![longest_path_query](./images/neo4j_longestpath.png)
+
 # MongoDB queries
 Here various queries working on our imported data can be seen. For example: how many confirmed memes are created every year? Based on the query response we can see those numbers for the years 2008…2011, since we have limited the response to 5 items in total.
 
