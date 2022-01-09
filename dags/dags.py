@@ -2,13 +2,13 @@ import datetime
 import os
 
 from airflow import DAG
-from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.trigger_rule import TriggerRule
 
 from augmentation import augment
 from download_datasets import get_raw_dataset, get_vision_dataset
 from mongo_upload import upload_to_mongo
+from neo4j import neo4j_import
 from transformation import transform
 from cleaning import clean
 
@@ -90,9 +90,13 @@ mongo_upload_task = PythonOperator(
     }
 )
 
-neo4j_task = DummyOperator(
+neo4j_task = PythonOperator(
     task_id='run_neo4j',
-    dag=default_dag
+    dag=default_dag,
+    python_callable=neo4j_import,
+    op_kwargs={
+        "transformed_file_path": TRANSFORMED_FILE_PATH
+    }
 )
 
 # Run the tasks.

@@ -14,4 +14,4 @@ def transform(augmented_file_path: str, transformed_file_path: str):
 
     df=df.drop(columns=['added_datetime'], axis=1)
 
-    df.to_json(path_or_buf=f"{transformed_file_path}", orient='columns')
+    df.to_json(path_or_buf=f"{transformed_file_path}", orient='records')
