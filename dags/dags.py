@@ -8,7 +8,7 @@ from airflow.utils.trigger_rule import TriggerRule
 from augmentation import augment
 from download_datasets import get_raw_dataset, get_vision_dataset
 from mongo_upload import upload_to_mongo
-from neo4j import neo4j_import
+from neo4j_import import neo4j_import
 from transformation import transform
 from cleaning import clean
 
