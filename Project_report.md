@@ -9,6 +9,7 @@ Project members:
 * Roland Pajuleht
 
 ## Our proposed taskplan:
+
 Idea was to make a minimalistic ER schema. Keep all the atomic attributes in respective entities and keep all the cardinalities under control. Meaning that there wouldn't exist M to N pairs.
 
 1. Data cleansing:
@@ -41,8 +42,11 @@ We worked out a plan. On the first step, which is data cleaning, we drop the fie
 
 ## Unsuccessful attempts:
 
-Since the coding background for Rasmus, Kaja and Roland was minimal to say the least, this project seemed rather overwhelming in the beginning. Luckily from a database course, which Rasmus was taking in parallel, he was introduced to this tool called talend. It seemed like a user-friendly ETL tool designed specifically for us in mind. An environment where you can simply drag and drop boxes and on the background some Java code does all the heavy lifting for you. After working for many hours on reading up on how to import json and some different working mechanics on boxes and how to connect them and so forth, we got the first pipeline working, everything seemed to go as planned.
-However when we wanted to integrate it with the airflow, making a JAR runnable file out of the talend job used, our efforts were in vain. The integration did not work because of the t.jsoninput component used in talend job was not supported by airflow. Below is a screenshot from the first pipeline done with talend.
+Since the coding background for Rasmus, Kaja and Roland was minimal to say the least, this project seemed rather overwhelming in the beginning. Luckily from a database course, which Rasmus was taking in parallel, he was introduced to this tool called Talend. It seemed like a user-friendly ETL tool designed specifically for us in mind. An environment where you can simply drag and drop boxes and on the background some Java code does all the heavy lifting for you. After working for many hours on reading up on how to import JSON and some different working mechanics on boxes and how to connect them and so forth, we got the first pipeline working, everything seemed to go as planned.
+
+However, when we wanted to integrate it with Airflow, when trying to export a JAR runnable file out of the Talend job, it turned out our efforts were in vain. The exported JAR had multiple issues, from not having a `MANIFEST.mf` nor a main class to run, eventually bypassing those we ended at a [reported bug](https://community.talend.com/s/article/Job-using-tFileInputJSON-fails-saying-that-the-path-doesn-t-exist-1zO2E?language=en_US) related to `JSONInput` component in Talend. So we gave up - deleted code can be seen from [this commit](https://github.com/martmagi/data-engineering/commit/db9bf81ca0f3ced94038e4ae5bb0c12e2a477a27).
+
+Below is a screenshot from the first pipeline done with Talend.
 
 ![Talend dashboard](./images/talend_dashboard.png)
 
@@ -95,10 +99,16 @@ We chose to use mongoDB, since it was introduced to us in a course practice sess
 
 ## Neo4J queries
 
+1. Finding the meme with most child relations
+
 `MATCH (child)-[r:CHILD]->(parent) RETURN parent, COLLECT(child) as childs ORDER BY SIZE(childs) desc  limit 1`
+
 ![most_children_query](./images/neo4j_mostchildren.png)
 
+2. Finding the longest path of parent-child relations in memes
+   
 `MATCH p=(start:Meme)-[:CHILD*1..10]->(end:Meme) RETURN p ORDER BY length(p) DESC LIMIT 1`
+
 ![longest_path_query](./images/neo4j_longestpath.png)
 
 ## MongoDB queries
