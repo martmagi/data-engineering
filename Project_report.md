@@ -29,7 +29,7 @@ Idea was to make a minimalistic ER schema. Keep all the atomic attributes in res
 4. Analysis:
    1. Show the number of the memes per year in descending order.  (SQL)
    2. Which memes have the largest number of common tags? 
-   3. All memes containing tag Estonia.  Sort by year. 
+   3. All memes containing tag Estonia. Sort by year.
    4. Rank memes by origin (youtube, 4chan, fb etc) (content->origin->links)
    5. Something to Query about semantic relations of memes. (if you could help us with this it would be great)
 
@@ -102,47 +102,74 @@ We chose to use mongoDB, since it was introduced to us in a course practice sess
 ![longest_path_query](./images/neo4j_longestpath.png)
 
 ## MongoDB queries
-Here various queries working on our imported data can be seen. For example: how many confirmed memes are created every year? Based on the query response we can see those numbers for the years 2008…2011, since we have limited the response to 5 items in total.
 
-![img_24](https://user-images.githubusercontent.com/59621572/148609086-522a83e6-6a0a-464c-ad4c-382c59eb4a04.png)
+Here various queries working on our imported data can be seen:
 
-and the response
+1. How many confirmed memes are created every year? Based on the query response we can see those numbers for the years 2008…2011, since we have limited the response to 5 items in total.
+```
+Query:
+{"$group":{"_id":"$year","memes_per_year":{"$sum":1}}},{"$sort":{"memes_per_year":-1}},{"$limit":5}
 
-![img_25](https://user-images.githubusercontent.com/59621572/148609087-8fc66f11-d4af-4670-95b7-a3c578caae90.png)
+Response:
+{'_id': 2011.0, 'memes_per_year': 429}
+{'_id': 2010.0, 'memes_per_year': 348}
+{'_id': 2012.0, 'memes_per_year': 300}
+{'_id': 2009.0, 'memes_per_year': 251}
+{'_id': 2008.0, 'memes_per_year': 242}
+```
 
-Originally we wanted to query if there are any memes about Estonia, but sadly, there were not. So how about our neighbours over the Baltic sea. To our surprise there was only one meme about Finland, which is called Apu apustaja.
+2. Originally we wanted to query if there are any memes about Estonia, but sadly, there were not. So how about our neighbours over the Baltic sea. To our surprise there was only one meme about Finland, which is called Apu apustaja.
 
-![img_26](https://user-images.githubusercontent.com/59621572/148609088-b3137652-0c0d-4350-abcb-cbcb1b4d2455.png)
+```
+Query:
+{"tags": "finland"}
 
-and the response 
+Response:
+{'_id': ObjectId('61dc4420fe930b04b2ed0c2d'), 'title': 'Apu Apustaja', 'url': 'https://knowyourmeme.com/memes/apu-apustaja', 'added': 1476914381.0, 'content': {'about': {'text': ['Apu Apustaja ("Help Helper" in English) is a poorly drawn variation of Pepe the Frog created in the style of Spurdo Spärde. While originally popularized on the Finnish image board Ylilauta, the character is also frequently posted on 4chan where he is referred to as "Helper."'], 'links': [['Pepe the Frog', 'https://knowyourmeme.com/memes/pepe-the-frog'], ['Spurdo Spärde', 'https://knowyourmeme.com/memes/spurdo-sparde'], ['image board', 'https://knowyourmeme.com/memes/subcultures/imageboard'], ['Ylilauta', 'https://knowyourmeme.com/memes/sites/ylilauta'], ['4chan', 'https://knowyourmeme.com/memes/sites/4chan']]}, 'origin': {'text': ['The character is rumored to have originated from the Finnish image board Ylilauta. While no archived threads exist, Google search records indicate the phrase "apu apustaja" began appearing on the site in January 2016.[5]'], 'links': [['Google', 'https://knowyourmeme.com/memes/sites/google']]}, 'spread': {'text': ['On January 14th, 2016, the "Apu Apustaja" Facebook page was launched.[6] On March 25th, an anonymous 4chan user submitted the Apu Apustaja version of Pepe captioned with a misspelled sentence about a "food help helper" to the /b/ (random) board (shown below, left).[1] The following day, a similar thread was submitted to /b/ in which the character complains that his "food help helper" was missing (shown below, right).[2]', 'On April 19th, a thread featuring various illustrations of the character was submitted to the /int/[4] (international) board (shown below, left). On October 2nd, 2016, an illustration of the character was submitted alongside Pepe the Frog-themed parody lyrics for the theme song from the science fiction television show Firefly to 4chan. The following day, a screenshot of the post reached the front page of the /r/4chan subreddit (shown below, right).[3]'], 'links': [['Facebook', 'https://knowyourmeme.com/memes/sites/facebook'], ['/b/', 'https://knowyourmeme.com/memes/sites/b'], ['/int/', 'https://knowyourmeme.com/memes/sites/int'], ['Frog', 'https://knowyourmeme.com/memes/subcultures/frogs'], ['parody', 'https://knowyourmeme.com/memes/cultures/parody-spoof'], ['subreddit', 'https://knowyourmeme.com/memes/sites/reddit']], 'images': ['https://i.kym-cdn.com/photos/images/newsfeed/001/182/907/464.jpg', 'https://i.kym-cdn.com/photos/images/newsfeed/001/182/906/082.jpg', 'https://i.kym-cdn.com/photos/images/newsfeed/001/182/908/310.jpg', 'https://i.kym-cdn.com/photos/images/newsfeed/001/182/725/f85.png']}, 'various examples': {'images': ['https://i.kym-cdn.com/photos/images/newsfeed/001/182/920/0cf.php', 'https://i.kym-cdn.com/photos/images/newsfeed/001/182/918/618.png', 'https://i.kym-cdn.com/photos/images/newsfeed/001/182/913/1fe.png', 'https://i.kym-cdn.com/photos/images/newsfeed/001/182/914/c4a.jpg', 'https://i.kym-cdn.com/photos/images/newsfeed/001/182/912/02f.jpg', 'https://i.kym-cdn.com/photos/images/newsfeed/001/182/910/10e.png']}, 'search interest': {}, 'external references': {'text': ['[1] Archive.is – hi all mi food help helper', '[2] Archive.is – food help helper forget to come today', '[3] Reddit – /pol/tard writes a poem', '[4] Archive.is – spoin is liked by my', '[5] Google – Apu apustaja', '[6] Facebook – Apu Apustaja'], 'links': [['hi all mi food help helper', 'https://archive.is/cgOwB'], ['food help helper forget to come today', 'https://4archive.org/board/b/thread/675962015'], ['/pol/tard writes a poem', 'https://www.reddit.com/r/4chan/comments/55ki1z/poltard_writes_a_poem/'], ['spoin is liked by my', 'https://archive.is/H227J'], ['Apu apustaja', 'https://www.google.com/search?q=%22apu+apustaja%22+ylilauta&source=lnt&tbs=cdr%3A1%2Ccd_min%3A10%2F1%2F2015%2Ccd_max%3A2%2F1%2F2016&tbm'], ['Apu Apustaja', 'https://www.facebook.com/apustaja']]}}, 'tags': ['pepe the frog', 'finland', 'finnish', 'helper', 'ylilauta', 'fren'], 'parent': 'https://knowyourmeme.com/memes/pepe-the-frog', 'siblings': ['https://knowyourmeme.com/memes/cheesed-to-meet-you', 'https://knowyourmeme.com/memes/pepe-punch', 'https://knowyourmeme.com/memes/subcultures/feels-good-man-2020-film', 'https://knowyourmeme.com/memes/clown-pepe-honk-honk-clown-world', 'https://knowyourmeme.com/memes/groyper', 'https://knowyourmeme.com/memes/events/pepe-the-frog-dmca-takedowns', 'https://knowyourmeme.com/memes/blepe', 'https://knowyourmeme.com/memes/apu-apustaja', 'https://knowyourmeme.com/memes/events/nazi-pepe-controversy', 'https://knowyourmeme.com/memes/rare-pepe', 'https://knowyourmeme.com/memes/fefe', 'https://knowyourmeme.com/memes/angry-pepe', 'https://knowyourmeme.com/memes/well-memed', 'https://knowyourmeme.com/memes/smug-frog', 'https://knowyourmeme.com/memes/feels-bad-man-sad-frog', 'https://knowyourmeme.com/memes/feels-good-man'], 'children': ['https://knowyourmeme.com/memes/sites/frenworld'], 'status': 'confirmed', 'origin': 'Ylilauta', 'year': 2016.0, 'google_api_description': ['Facial expression', 'Vertebrate', 'Cartoon', 'Green', 'Organism', 'Happy', 'Gesture', 'Art', 'Sharing', 'Rectangle'], 'adult': '', 'spoof': '', 'medical': '', 'violence': '', 'racy': '', 'added_weekday': 'Wednesday', 'added_month': 'October', 'added_year': 2016.0, 'how_long_till_upload': 0.0}
+```
 
-![img_27](https://user-images.githubusercontent.com/59621572/148609091-1cd5481e-8bce-4ab3-9817-60b1feb3cff9.png)
+3. Here are the top 5 tags, which are the most common as over all the memes in our dataset.
 
+```
+Query:
+{"$unwind":"$tags"},{"$group":{"_id":"$tags","count":{"$sum":1}}},{"$sort":{"count":-1}},{"$limit":5}
 
-Here are the top 5 tags, which are the most common as over all the memes in our dataset.
+Response:
+{'_id': 'image macro', 'count': 351}
+{'_id': '4chan', 'count': 349}
+{'_id': 'youtube', 'count': 284}
+{'_id': 'catchphrase', 'count': 261}
+{'_id': 'exploitable', 'count': 225}
+```
 
-![img_29](https://user-images.githubusercontent.com/59621572/148609058-a4c3e9ac-ae4c-41b4-92e0-c4a19345ca83.png)
+4. Top 5 places where most of the memes originate from.
 
-and the response
+```
+Query:
+{"$unwind":"$content.origin.links"},{"$group":{"_id":"$content.origin.links","count":{"$sum":1}}},{"$sort":{"count":-1}},{"$limit":5}
 
-![img_30](https://user-images.githubusercontent.com/59621572/148609059-3bf024d6-0f66-4abc-9b47-d11c6dbcb7ff.png)
+Response:
+{'_id': ['YouTube', 'https://knowyourmeme.com/memes/sites/youtube'], 'count': 215}
+{'_id': ['4chan', 'https://knowyourmeme.com/memes/sites/4chan'], 'count': 213}
+{'_id': ['Tumblr', 'https://knowyourmeme.com/memes/sites/tumblr'], 'count': 147}
+{'_id': ['Urban Dictionary', 'https://knowyourmeme.com/memes/sites/urban-dictionary'], 'count': 105}
+{'_id': ['Redditor', 'https://knowyourmeme.com/memes/sites/reddit'], 'count': 98}
+```
 
+5. And now using some field generated through our data transformation, here are the 6 most meme heavy months.
 
-Top 5 places where most of the memes originate from.
-![img_31](https://user-images.githubusercontent.com/59621572/148609060-d47affc2-8f8c-4416-97b1-6495e7cf272d.png)
+```
+Query:
+{"$group":{"_id":"$added_month","memes_per_month":{"$sum":1}}},{"$sort":{"memes_per_month":-1}},{"$limit":6}
 
-and the response
-
-![img_32](https://user-images.githubusercontent.com/59621572/148609063-fd2348d6-407e-43cb-9745-55c8a73b6da3.png)
-
-And now using some field generated through our data transformation, here are the 6 most meme heavy months.
-
-![img_34](https://user-images.githubusercontent.com/59621572/148609064-2d398ff4-fc5a-43da-ad16-1e42078263d9.png)
-
-and the response 
-
-![img_35](https://user-images.githubusercontent.com/59621572/148609065-2c9cea78-d063-442e-8162-c43e0fcc4ccc.png)
-
+Response:
+{'_id': 'May', 'memes_per_month': 381}
+{'_id': 'July', 'memes_per_month': 380}
+{'_id': 'August', 'memes_per_month': 380}
+{'_id': 'April', 'memes_per_month': 373}
+{'_id': 'March', 'memes_per_month': 361}
+{'_id': 'January', 'memes_per_month': 356}
+```
 
 ## Contributions of members to the project
 

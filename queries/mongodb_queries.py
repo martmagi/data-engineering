@@ -9,7 +9,7 @@ MONGO_CONNECTION_STRING = f'mongodb+srv://{MONGO_USER}:{MONGO_SECRET}@{MONGO_URL
 client = pymongo.MongoClient(MONGO_CONNECTION_STRING)
 db = client.memesDB
 
-#Show the number of the memes per year in descending order (SQL)
+#Show the number of the memes per year in descending order
 memes_per_year_pipeline = [
     {
         "$group": {
@@ -100,9 +100,8 @@ for doc in memes_by_origin:
     print(doc)
 print('')
 
-# Something to Query about semantic relations of memes
 
-#Show the number of the memes per weekday in descending order (SQL)
+#Show the number of the memes per weekday in descending order
 memes_per_weekday_pipeline = [
     {
         "$group": {
@@ -127,7 +126,7 @@ for doc in memes_per_weekday:
     print(doc)
 print('')
 
-#Show the number of the memes per month in descending order (SQL)
+#Show the number of the memes per month in descending order
 memes_per_month_pipeline = [
     {
         "$group": {
