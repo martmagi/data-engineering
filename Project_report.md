@@ -21,42 +21,46 @@ we worked out a plan. On the first step, which is data cleaning, we drop the fie
 ![Proposed ER schema](./images/proposed_er_schema.png)
 
 ## Unsuccessful attempts:
+
 Since the coding background for Rasmus, Kaja and Roland was minimal to say the least, this project seemed rather overwhelming in the beginning. Luckily from a database course, which Rasmus was taking in parallel, he was introduced to this tool called talend. It seemed like a user-friendly ETL tool designed specifically for us in mind. An environment where you can simply drag and drop boxes and on the background some Java code does all the heavy lifting for you. After working for many hours on reading up on how to import json and some different working mechanics on boxes and how to connect them and so forth, we got the first pipeline working, everything seemed to go as planned.
 However when we wanted to integrate it with the airflow, making a JAR runnable file out of the talend job used, our efforts were in vain. The integration did not work because of the t.jsoninput component used in talend job was not supported by airflow. Below is a screenshot from the first pipeline done with talend.
 
 ![Talend dashboard](./images/talend_dashboard.png)
 
 ## Pipeline overview
-Before moving on to the specific dags themselves, one can see the overall structure of the pipelines as it can be seen in the airflow UI. Starting from the  DAG 0, which is the dag tying up all the following subdags and ending with the dag called run_neo4j, which is the dag for importing our output from the transform dag to neo4_j database. At the bottom work with parallelizing some tasks can be seen.
+Overall structure of the pipelines as it can be seen in the Airflow UI. Starting with two parallel branches to pull both datasets and ending again with parallel branches to upload to MongoDB and Neo4J databases. 
 
-![Graph view](./images/dag_graph_view.png)
-![Tree view](./images/dag_tree_view.png)
+|                 Graph view                 |                Tree View                 |
+|:------------------------------------------:|:----------------------------------------:|
+| ![Graph view](./images/dag_graph_view.png) | ![Tree view](./images/dag_tree_view.png) |
 
 ### Creating the DAG
 
-From the necessary imports, it can be seen that python operator is mainly used, since it is the most familiar language to us in the group. Following the imports the metadag ties together all the other dags, allowing for a general readpath for subdags, and also the schedule interval for the entire pipeline can be set through that dag.
-
-[Link](./dags/dags.py) to code DAG creation and control flow.
+[Link](./dags/dags.py) to code that shows Airflow DAG creation and task control flow.
 
 ### Pulling the datasets (parallel)
-The first official DAG is downloading the necessary data files. For our pipelines we needed 2 different files. First is the previously mentioned raw data file kym.json and also kym_vision.json file, the google vision API file, which has already been put together on the dataset.
 
-[Link](./dags/download_datasets.py) to code that downloads both the original KYM dataset and Google Vision dataset from the course's provided sources.
+The first pipeline steps download the necessary data files. For our pipelines we needed 2 different files. First is the previously mentioned raw data file `kym.json` and also `kym_vision.json` file, the Google Vision API file, which has already been put together on the dataset.
+
+[Link](./dags/download_datasets.py) to code that downloads both the original KnowYourMeme dataset and Google Vision dataset from the course's provided sources.
 
 ### Cleaning step
-So as for the cleaning, we imported necessary libraries. Then read in the file as a dataframe. First thing, we decided to get the data we wanted out of a dictionary field, details. Then we created new columns for status, origin and year and looped them in. next we dropped unwanted columns, duplicates based on title and url. After that the  decision was to keep only confirmed memes in our dataset. The necessary criteria for that decision was specified in status column. Last step was to write out the json file and that’s all done with the cleaning.
+
+For the cleaning step, we read in the file as a [Pandas DataFrame](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html). First thing, we decided to get the data we wanted out of a dictionary field, details. Then we created new columns for status, origin and year and looped them in. next we dropped unwanted columns, duplicates based on title and url. After that the  decision was to keep only confirmed memes in our dataset. The necessary criteria for that decision was specified in status column. Last step was to write out the json file and that’s all done with the cleaning.
 
 [Link](./dags/cleaning.py) to code that runs cleaning steps using [pdpipe library](https://github.com/pdpipe/pdpipe).  
 
 ### Augmentation step
-Now the output of the previous dag is piped to dag 3, which is the data augmentation dag. Luckily for us we already had the necessary google vision API responses in a file set up. So the task in that regard was more as a data transformation step for us. So first thing to do was to read in both the downloaded file as a dataframe df_vision and cleaned file as df, then get the set difference for all the values between two dataframes based on url overlap. That list was used to drop all the unneccesary records in the df_vision. Then new columns were created for the attributes we wanted to extract from the vision dataframe.
-Next we looped through every url in the dag2 output and extracted the wanted fields where we had url match between the dataframes. Here we wanted to get all the API reponses for the type of content, regarding its classification as of belonging in the adult, spoof, medical, violence or racism categories.
-The problem with description attribute from the vision_dataframe was that it was in a list as bunch of items. Since there didn’t seem to be any already built-in method to insert a list into a dataframe cell, a new list with the length of the original dataframe was made. Every url in the original dataframe was looped through and based on url match, up to 10 most popular API responses for the meme description were extracted and written under respective index in the created list. The final step was to insert that newly created and filled list to original dataframe under  column named - google_api_description,  and save it all out as json again.
+
+Now the output of the previous cleaning step is piped to augmentation step. Luckily for us we already had the necessary Google Vision API responses in a file set up. So the task in that regard was more as a data transformation step for us. So first thing to do was to read in both the downloaded file as a dataframe `df_vision` and cleaned file as df, then get the set difference for all the values between two dataframes based on url overlap. That list was used to drop all the unnecessary records in the `df_vision`. Then new columns were created for the attributes we wanted to extract from the vision dataframe.
+Next we looped through every url in the cleaning output and extracted the wanted fields where we had url match between the dataframes. Here we wanted to get all the API responses for the type of content, regarding its classification as of belonging in the adult, spoof, medical, violence or racism categories.
+The problem with description attribute from the `vision_dataframe` was that it was in a list as bunch of items. Since there didn't seem to be any already built-in method to insert a list into a dataframe cell, a new list with the length of the original dataframe was made. Every url in the original dataframe was looped through and based on url match, up to 10 most popular API responses for the meme description were extracted and written under respective index in the created list. The final step was to insert that newly created and filled list to original dataframe under  column named - `google_api_description`, and save it all out as json again.
 
 [Link](./dags/augmentation.py) to code that augments the cleaned data with metadata acquired from Google Vision dataset.
 
 ### Transformation step
-The next stage in the pipeline was the transformations. These ones we decided to keep pretty basic, since we didn’t see really what else we could transform here, since the numeric content of the data was pretty restricted and more sophisticated nlp is over our heads at this point in time. So we had 2 numeric fields we could work with. The first one was the unix timestamp from the time the meme was imported to the knowyourmeme database. So we extracted the human readable datetime from that timestamp. From that datetime we extracted day, month and year. And on top of that we calculated a new value - how_long_till_upload, which gives us the time window in years since the time of meme creation and upload to knowyourmeme database. It works for old memes, but since the origin is given simply as a year for us, then with newer memes its most likely going to be just 0. These newly transformed fields however help us with various meaningful queries.
+
+The next stage in the pipeline was the transformations. These ones we decided to keep pretty basic, since we didn't see really what else we could transform here, since the numeric content of the data was pretty restricted and more sophisticated NLP is over our heads at this point in time. So we had 2 numeric fields we could work with. The first one was the UNIX timestamp from the time the meme was imported to the knowyourmeme database. So we extracted the human readable datetime from that timestamp. From that datetime we extracted day, month and year. And on top of that we calculated a new value - `how_long_till_upload`, which gives us the time window in years since the time of meme creation and upload to knowyourmeme database. It works for old memes, but since the origin is given simply as a year for us, then with newer memes its most likely going to be just 0. These newly transformed fields however help us with various meaningful queries.
 
 [Link](./dags/transformation.py) to code that transforms some of the existing data fields to facilitate more convenient querying.
 
