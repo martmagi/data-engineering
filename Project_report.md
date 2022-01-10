@@ -9,12 +9,31 @@ Project members:
 * Roland Pajuleht
 
 ## Our proposed taskplan:
-Idea was to make a minimalistic ER schema. Keep all the atomic attributes in respective entitites and keep all the 
-cardinalities under control. Meaning that there woulnd't exist M to N pairs.
+Idea was to make a minimalistic ER schema. Keep all the atomic attributes in respective entities and keep all the cardinalities under control. Meaning that there wouldn't exist M to N pairs.
 
-![Proposed taskplan](https://user-images.githubusercontent.com/59621572/148609067-3048d268-8082-4253-97eb-f7d949255c04.png)
+1. Data cleansing:
+    1. Keep only confirmed memes (specified under details)
+    2. Remove duplicates if any (based on title + URL)
+    3. Remove fields except:
+        1. title,  added, template_image_url, tags, details, (meta[description] for the last mentioned Query if we can do it)
+2. Data augmentation/enrichment:
+   1. Create new schema
+   2. Assign unique IDs 
+   3. Download template image and send it to google vision API, and store
+3. Data transformations:
+   1. Datetime transformations to get day, month, year and possibly season. 
+   2. Transformations on data based on google vision output. 
+   3. Location aggregation based on region (Europe, Asia, online etc.)
+   4. Convert to Neo4j acceptable input. 
+   5. Make ER schema for SQL DB.
+4. Analysis:
+   1. Show the number of the memes per year in descending order.  (SQL)
+   2. Which memes have the largest number of common tags? 
+   3. All memes containing tag Estonia.  Sort by year. 
+   4. Rank memes by origin (youtube, 4chan, fb etc) (content->origin->links)
+   5. Something to Query about semantic relations of memes. (if you could help us with this it would be great)
 
-we worked out a plan. On the first step, which is data cleaning, we drop the fields which we believe are not necessary for us, so that we can decrease the computational load due to memory footprint and calculations and so on. With the second step, data augmentation/enrichment, we chose to use google vision API response on our url. On the third step, data transformations, the idea was to get more meaningful information from the raw data and finally with the analysis step to run some queries, such as the most popular day for the meme upload or region specific memes and so on. 
+We worked out a plan. On the first step, which is data cleaning, we drop the fields which we believe are not necessary for us, so that we can decrease the computational load due to memory footprint and calculations and so on. With the second step, data augmentation/enrichment, we chose to use google vision API response on our url. On the third step, data transformations, the idea was to get more meaningful information from the raw data and finally with the analysis step to run some queries, such as the most popular day for the meme upload or region specific memes and so on. 
 
 ## Our proposed ER schema:
 
@@ -64,13 +83,14 @@ The next stage in the pipeline was the transformations. These ones we decided to
 
 [Link](./dags/transformation.py) to code that transforms some of the existing data fields to facilitate more convenient querying.
 
-### Database import (MongoDB and Neo4J)
-But before that step,  one actually needs something to query upon.
-So as for our fifth dag we chose to import it to mongodb using pymongo.
+### Database import (parallel, MongoDB and Neo4J)
+But before that step, one actually needs something to query upon.
+So as for our fifth dag we chose to import it to MongoDB using [PyMongo](https://pymongo.readthedocs.io/en/stable/).
 We chose to use mongoDB, since it was introduced to us in a course practice session and this particular session sympathized to us. MongoDB seemed like a perfect fit for nebwies like us.
 
 [Link](./dags/mongo_upload.py) to code that uploads the data to MongoDB web database (we used [MongoDB Atlas](https://www.mongodb.com/atlas/database) for convenience and to test out HTTP upload)
-[Link](./dags/neo4j_import.py) to code that imports the data to a Neo4J database running in Docker container.
+
+[Link](./dags/neo4j_import.py) to code that imports the data to a Neo4J database running in local Docker container.
 
 
 ## Neo4J queries
